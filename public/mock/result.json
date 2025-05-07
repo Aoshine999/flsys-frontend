@@ -1,0 +1,16 @@
+{
+    "model_name": "resnet18-central_model-2025-05-03_19-39-38",
+    "1": {
+        "loss": 1.4481445741653443,
+        "cen_accuracy": 0.4902
+    },
+    "2": {
+        "loss": 1.2619098726272584,
+        "cen_accuracy": 0.553
+    },
+    "final": {
+        "test_loss": 1.24856559009552,
+        "test_acc": 0.5639
+    },
+    "total_train_time": "0h 3m 5s"
+}

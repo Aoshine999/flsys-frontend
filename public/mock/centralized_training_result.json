@@ -1,0 +1,17 @@
+{
+    "model_name": "mobilenet_v3_small-central_model-2025-04-28_19-23-09",
+    
+    "1": {
+        "loss": 0.9986573553085327,
+        "cen_accuracy": 0.6463
+    },
+    "2": {
+        "loss": 0.856705495262146,
+        "cen_accuracy": 0.6948
+    },
+    "final": {
+        "test_loss": 0.6436755399703979,
+        "test_acc": 0.7541
+    },
+    "total_train_time" : "2小时15分钟"
+}

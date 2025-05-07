@@ -10,9 +10,11 @@
       <div class="login-right">
         <el-card class="login-card">
           <div class="login-header">
-            <h2>系统登录</h2>
+            <h2>{{ isLogin ? '系统登录' : '用户注册' }}</h2>
           </div>
+          <!-- 登录表单 -->
           <el-form 
+            v-if="isLogin"
             ref="loginFormRef" 
             :model="loginForm" 
             :rules="loginRules" 
@@ -46,6 +48,75 @@
                 登录
               </el-button>
             </el-form-item>
+            <div class="form-footer">
+              <span>没有账号？</span>
+              <el-button type="text" @click="toggleForm">立即注册</el-button>
+            </div>
+          </el-form>
+          
+          <!-- 注册表单 -->
+          <el-form 
+            v-else
+            ref="registerFormRef" 
+            :model="registerForm" 
+            :rules="registerRules" 
+            label-position="top"
+            size="large"
+          >
+            <el-form-item label="用户名" prop="username">
+              <el-input 
+                v-model="registerForm.username"
+                placeholder="请输入用户名"
+                prefix-icon="User"
+              />
+            </el-form-item>
+            <el-form-item label="密码" prop="password">
+              <el-input 
+                v-model="registerForm.password"
+                type="password"
+                placeholder="请输入密码"
+                prefix-icon="Lock"
+                show-password
+              />
+            </el-form-item>
+            <el-form-item label="确认密码" prop="confirmPassword">
+              <el-input 
+                v-model="registerForm.confirmPassword"
+                type="password"
+                placeholder="请再次输入密码"
+                prefix-icon="Lock"
+                show-password
+              />
+            </el-form-item>
+            <el-form-item label="邮箱" prop="email">
+              <el-input 
+                v-model="registerForm.email"
+                placeholder="请输入邮箱"
+                prefix-icon="Message"
+              />
+            </el-form-item>
+            <el-form-item label="姓名" prop="fullName">
+              <el-input 
+                v-model="registerForm.fullName"
+                placeholder="请输入姓名"
+                prefix-icon="User"
+              />
+            </el-form-item>
+            <el-form-item>
+              <el-button 
+                type="primary" 
+                :loading="loading" 
+                @click="handleRegister" 
+                style="width: 100%;"
+                size="large"
+              >
+                注册
+              </el-button>
+            </el-form-item>
+            <div class="form-footer">
+              <span>已有账号？</span>
+              <el-button type="text" @click="toggleForm">返回登录</el-button>
+            </div>
           </el-form>
         </el-card>
       </div>
@@ -66,10 +137,20 @@ const router = useRouter()
 const authStore = useAuthStore()
 const loading = ref(false)
 const loginFormRef = ref<FormInstance>()
+const registerFormRef = ref<FormInstance>()
+const isLogin = ref(true)
 
 const loginForm = reactive({
   username: '',
   password: ''
+})
+
+const registerForm = reactive({
+  username: '',
+  password: '',
+  confirmPassword: '',
+  email: '',
+  fullName: ''
 })
 
 const loginRules = {
@@ -79,6 +160,62 @@ const loginRules = {
   password: [
     { required: true, message: '请输入密码', trigger: 'blur' },
   ]
+}
+
+const validatePass = (rule: any, value: string, callback: any) => {
+  if (value === '') {
+    callback(new Error('请输入密码'))
+  } else if (value.length < 6) {
+    callback(new Error('密码长度不能小于6位'))
+  } else {
+    if (registerForm.confirmPassword !== '') {
+      registerFormRef.value?.validateField('confirmPassword')
+    }
+    callback()
+  }
+}
+
+const validatePass2 = (rule: any, value: string, callback: any) => {
+  if (value === '') {
+    callback(new Error('请再次输入密码'))
+  } else if (value !== registerForm.password) {
+    callback(new Error('两次输入密码不一致'))
+  } else {
+    callback()
+  }
+}
+
+const validateEmail = (rule: any, value: string, callback: any) => {
+  if (value === '') {
+    callback()
+  } else {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(value)) {
+      callback(new Error('请输入有效的邮箱地址'))
+    } else {
+      callback()
+    }
+  }
+}
+
+const registerRules = {
+  username: [
+    { required: true, message: '请输入用户名', trigger: 'blur' },
+    { min: 3, max: 20, message: '用户名长度应在3-20个字符之间', trigger: 'blur' }
+  ],
+  password: [
+    { validator: validatePass, trigger: 'blur' }
+  ],
+  confirmPassword: [
+    { validator: validatePass2, trigger: 'blur' }
+  ],
+  email: [
+    { validator: validateEmail, trigger: 'blur' }
+  ]
+}
+
+const toggleForm = () => {
+  isLogin.value = !isLogin.value
 }
 
 const handleLogin = async () => {
@@ -93,6 +230,30 @@ const handleLogin = async () => {
         router.push('/')
       } catch (error: any) {
         ElMessage.error(error.message || '登录失败')
+      } finally {
+        loading.value = false
+      }
+    }
+  })
+}
+
+const handleRegister = async () => {
+  if (!registerFormRef.value) return
+  
+  await registerFormRef.value.validate(async (valid) => {
+    if (valid) {
+      loading.value = true
+      try {
+        await authStore.register(
+          registerForm.username, 
+          registerForm.password,
+          registerForm.email || undefined,
+          registerForm.fullName || undefined
+        )
+        ElMessage.success('注册成功')
+        router.push('/')
+      } catch (error: any) {
+        ElMessage.error(error.message || '注册失败')
       } finally {
         loading.value = false
       }
@@ -332,5 +493,11 @@ const handleLogin = async () => {
   .el-form-item {
     margin-bottom: 15px;
   }
+}
+
+.form-footer {
+  text-align: center;
+  margin-top: 15px;
+  font-size: 14px;
 }
 </style> 

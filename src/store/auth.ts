@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import router from '../router'
-import { login as apiLogin, logout as apiLogout, checkAuth, Admin } from '../services/api'
+import { login as apiLogin, logout as apiLogout, checkAuth, Admin, register as apiRegister } from '../services/api'
 
 export const useAuthStore = defineStore('auth', () => {
   const user = ref<Admin | null>(null)
@@ -55,6 +55,25 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  // 注册函数
+  const register = async (username: string, password: string, email?: string, full_name?: string) => {
+    try {
+      // 调用API注册接口
+      const adminData = await apiRegister(username, password, email, full_name)
+      
+      // 更新本地状态
+      user.value = adminData
+      isAuthenticated.value = true
+      
+      // 保存到localStorage
+      localStorage.setItem('user', JSON.stringify(adminData))
+      
+      return Promise.resolve()
+    } catch (error: any) {
+      return Promise.reject(new Error(error.response?.data?.message || '注册失败，请稍后重试'))
+    }
+  }
+
   // 退出登录
   const logout = async () => {
     try {
@@ -76,6 +95,7 @@ export const useAuthStore = defineStore('auth', () => {
     isAuthenticated,
     login,
     logout,
+    register,
     initAuth
   }
 }) 

@@ -62,11 +62,35 @@ export interface Admin {
   token?: string
 }
 
+export interface RegisterRequest {
+  username: string
+  password: string
+  email?: string
+  full_name?: string
+}
+
 // 登录API
 export const login = async (username: string, password: string): Promise<Admin> => {
   const response = await api.post<LoginResponse>('/auth/login', {
     username,
     password
+  })
+  
+  const admin = {
+    ...response.data.admin,
+    token: response.data.token
+  }
+  
+  return admin
+}
+
+// 注册API
+export const register = async (username: string, password: string, email?: string, full_name?: string): Promise<Admin> => {
+  const response = await api.post<LoginResponse>('/auth/register', {
+    username,
+    password,
+    email,
+    full_name
   })
   
   const admin = {
